@@ -1,0 +1,486 @@
+:root {
+  --te-bg: #e6e7e9;
+  --te-primary: #1a1a1a;
+  --te-accent: #ff6b6b;
+  --te-gray: #d8d9db;
+  --te-orange: #ff6b2b;
+  --te-shadow: rgba(0, 0, 0, 0.1);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--te-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image: 
+    linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.02) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      -45deg,
+      rgba(0, 0, 0, 0.02) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 75%,
+      rgba(0, 0, 0, 0.02) 75%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 75%,
+      rgba(0, 0, 0, 0.02) 75%
+    );
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.te-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 
+    0 1px 1px var(--te-shadow),
+    0 2px 2px var(--te-shadow),
+    0 4px 4px var(--te-shadow),
+    0 8px 8px var(--te-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.te-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--te-orange), var(--te-accent));
+}
+
+.te-controls {
+  margin-bottom: 30px;
+}
+
+.te-instruments {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--te-gray);
+  border-radius: 8px;
+  position: relative;
+}
+
+.te-instruments::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.te-instruments button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: white;
+  color: var(--te-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+}
+
+.te-instruments button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    transparent 50%,
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+}
+
+.te-instruments button.active {
+  background-color: var(--te-orange);
+  color: white;
+  transform: translateY(1px);
+  box-shadow: 
+    0 1px 1px var(--te-shadow);
+}
+
+.te-instruments button:hover {
+  transform: translateY(-1px);
+}
+
+.te-instruments button:active {
+  transform: translateY(1px);
+}
+
+.te-knobs {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--te-gray);
+  border-radius: 8px;
+  position: relative;
+}
+
+.te-knobs::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.te-knob {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+}
+
+.te-knob label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--te-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.te-knob input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: var(--te-gray);
+  border-radius: 2px;
+  outline: none;
+  position: relative;
+}
+
+.te-knob input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--te-orange);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+}
+
+.te-knob input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  background: var(--te-accent);
+}
+
+.te-keyboard {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  margin-top: 30px;
+  padding: 20px;
+  background: var(--te-gray);
+  border-radius: 8px;
+  position: relative;
+}
+
+.te-keyboard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.te-keyboard button {
+  padding: 20px 0;
+  border: none;
+  border-radius: 6px;
+  background-color: white;
+  color: var(--te-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.te-keyboard button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    transparent 50%,
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+}
+
+.te-keyboard button:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 2px 4px var(--te-shadow),
+    0 4px 8px var(--te-shadow);
+}
+
+.te-keyboard button:active {
+  background-color: var(--te-orange);
+  color: white;
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px var(--te-shadow);
+}
+
+.te-record {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--te-gray);
+  border-radius: 8px;
+  position: relative;
+}
+
+.te-record::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.te-record-mode {
+  display: flex;
+  gap: 10px;
+}
+
+.te-record-mode button,
+.te-record button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: white;
+  color: var(--te-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.te-record-mode button::after,
+.te-record button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    transparent 50%,
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+}
+
+.te-record-mode button.active,
+.te-record button.active {
+  background-color: var(--te-accent);
+  color: white;
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px var(--te-shadow);
+}
+
+.te-recordings {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: var(--te-gray);
+  border-radius: 8px;
+  position: relative;
+}
+
+.te-recordings::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.te-recordings h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--te-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.te-recording {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+}
+
+.te-recording:last-child {
+  margin-bottom: 0;
+}
+
+.te-audio-player {
+  width: 100%;
+  height: 32px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.te-recording-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.te-recording-controls button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--te-gray);
+  color: var(--te-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px var(--te-shadow),
+    0 2px 4px var(--te-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.te-recording-controls button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    transparent 50%,
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+}
+
+.te-recording-controls button.active {
+  background-color: var(--te-primary);
+  color: white;
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px var(--te-shadow);
+}
+
+.te-recording-controls button.delete {
+  background-color: var(--te-accent);
+  color: white;
+}

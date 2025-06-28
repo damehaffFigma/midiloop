@@ -34,66 +34,70 @@ function App() {
     }
   }).toDestination();
 
-  // Strings using high-quality piano samples (as a base for strings)
+  // Strings using orchestral string samples
   const strings = new Tone.Sampler({
     urls: {
-      "C3": "https://tonejs.github.io/audio/berklee/Piano_C3.mp3",
-      "C4": "https://tonejs.github.io/audio/berklee/Piano_C4.mp3",
-      "C5": "https://tonejs.github.io/audio/berklee/Piano_C5.mp3",
-      "C6": "https://tonejs.github.io/audio/berklee/Piano_C6.mp3"
+      "A3": "https://tonejs.github.io/audio/violin/A3.mp3",
+      "A4": "https://tonejs.github.io/audio/violin/A4.mp3",
+      "A5": "https://tonejs.github.io/audio/violin/A5.mp3",
+      "A6": "https://tonejs.github.io/audio/violin/A6.mp3",
+      "C4": "https://tonejs.github.io/audio/violin/C4.mp3",
+      "C5": "https://tonejs.github.io/audio/violin/C5.mp3",
+      "C6": "https://tonejs.github.io/audio/violin/C6.mp3",
+      "E4": "https://tonejs.github.io/audio/violin/E4.mp3",
+      "E5": "https://tonejs.github.io/audio/violin/E5.mp3",
+      "E6": "https://tonejs.github.io/audio/violin/E6.mp3",
     },
-    release: 2,
-    attack: 0.3,
-    volume: -6,
+    release: 1,
+    attack: 0.2,
+    volume: -8,
     onload: () => {
-      console.log("Strings samples loaded");
+      console.log("String samples loaded");
     }
-  }).connect(new Tone.Reverb({
-    decay: 5,
-    wet: 0.6
-  }).toDestination());
+  }).chain(
+    new Tone.Vibrato(5, 0.1),
+    new Tone.Reverb({ decay: 5, wet: 0.6 }),
+    Tone.Destination
+  );
 
-  // Church organ emulation
-  const organ = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 2,
-    modulationIndex: 5,
-    oscillator: {
-      type: "sine"
+  // Church organ with multiple ranks
+  const organ = new Tone.Sampler({
+    urls: {
+      "C2": "https://tonejs.github.io/audio/organ/C2.mp3",
+      "C3": "https://tonejs.github.io/audio/organ/C3.mp3",
+      "C4": "https://tonejs.github.io/audio/organ/C4.mp3",
+      "C5": "https://tonejs.github.io/audio/organ/C5.mp3",
+      "C6": "https://tonejs.github.io/audio/organ/C6.mp3",
     },
-    envelope: {
-      attack: 0.05,
-      decay: 0.2,
-      sustain: 0.9,
-      release: 0.1
-    },
-    modulation: {
-      type: "square"
-    },
-    modulationEnvelope: {
-      attack: 0.5,
-      decay: 0,
-      sustain: 1,
-      release: 0.5
+    release: 0.2,
+    attack: 0.05,
+    volume: -12,
+    onload: () => {
+      console.log("Organ samples loaded");
     }
-  }).connect(new Tone.Chorus(4, 2.5, 0.5).toDestination());
+  }).chain(
+    new Tone.Chorus(4, 2.5, 0.5),
+    new Tone.Reverb({ decay: 3, wet: 0.3 }),
+    Tone.Destination
+  );
 
-  // Enhanced drum kit with better samples
+  // TR-808 style drum kit
   const drumKit = {
     kick: new Tone.Player({
-      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/kick.mp3",
-      volume: 0
-    }).toDestination(),
-    snare: new Tone.Player({
-      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/snare.mp3",
+      url: "https://tonejs.github.io/audio/drum-samples/808/kick.mp3",
       volume: -2
     }).toDestination(),
+    snare: new Tone.Player({
+      url: "https://tonejs.github.io/audio/drum-samples/808/snare.mp3",
+      volume: -4
+    }).toDestination(),
     hihat: new Tone.Player({
-      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/hh.mp3",
-      volume: -6
+      url: "https://tonejs.github.io/audio/drum-samples/808/hihat.mp3",
+      volume: -8
     }).toDestination(),
     clap: new Tone.Player({
-      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/clap.mp3",
-      volume: -4
+      url: "https://tonejs.github.io/audio/drum-samples/808/clap.mp3",
+      volume: -6
     }).toDestination()
   };
 
@@ -323,31 +327,55 @@ function App() {
     setRecordings(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Haptic feedback function
+  const triggerHapticFeedback = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(50); // 50ms vibration
+    }
+  };
+
+  // Handle instrument selection with haptic feedback
+  const handleInstrumentChange = (instrument: string) => {
+    setSelectedInstrument(instrument);
+    triggerHapticFeedback();
+    
+    // Visual feedback animation
+    const button = document.querySelector(`button[data-instrument="${instrument}"]`);
+    if (button) {
+      button.classList.add('instrument-change-flash');
+      setTimeout(() => button.classList.remove('instrument-change-flash'), 200);
+    }
+  };
+
   return (
     <div className="te-container">
       <div className="te-controls">
         <div className="te-instruments">
           <button 
+            data-instrument="synth"
             className={selectedInstrument === 'synth' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('synth')}
+            onClick={() => handleInstrumentChange('synth')}
           >
             Synth
           </button>
           <button 
+            data-instrument="strings"
             className={selectedInstrument === 'strings' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('strings')}
+            onClick={() => handleInstrumentChange('strings')}
           >
             Strings
           </button>
           <button 
+            data-instrument="organ"
             className={selectedInstrument === 'organ' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('organ')}
+            onClick={() => handleInstrumentChange('organ')}
           >
             Organ
           </button>
           <button 
+            data-instrument="drums"
             className={selectedInstrument === 'drums' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('drums')}
+            onClick={() => handleInstrumentChange('drums')}
           >
             Drums
           </button>

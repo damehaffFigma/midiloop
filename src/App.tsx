@@ -20,27 +20,76 @@ function App() {
   const [midiStatus, setMidiStatus] = useState<string>('Initializing MIDI...');
 
   // Initialize instruments
-  const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: {
+      type: "triangle"
+    },
+    envelope: {
+      attack: 0.005,
+      decay: 0.1,
+      sustain: 0.3,
+      release: 1
+    }
+  }).toDestination();
+
+  // Enhanced strings with more samples
   const strings = new Tone.Sampler({
     urls: {
+      "A0": "https://tonejs.github.io/audio/salamander/A0.mp3",
+      "C1": "https://tonejs.github.io/audio/salamander/C1.mp3",
+      "D#1": "https://tonejs.github.io/audio/salamander/Ds1.mp3",
+      "F#1": "https://tonejs.github.io/audio/salamander/Fs1.mp3",
+      "A1": "https://tonejs.github.io/audio/salamander/A1.mp3",
+      "C2": "https://tonejs.github.io/audio/salamander/C2.mp3",
+      "D#2": "https://tonejs.github.io/audio/salamander/Ds2.mp3",
+      "F#2": "https://tonejs.github.io/audio/salamander/Fs2.mp3",
+      "A2": "https://tonejs.github.io/audio/salamander/A2.mp3",
+      "C3": "https://tonejs.github.io/audio/salamander/C3.mp3",
+      "D#3": "https://tonejs.github.io/audio/salamander/Ds3.mp3",
+      "F#3": "https://tonejs.github.io/audio/salamander/Fs3.mp3",
+      "A3": "https://tonejs.github.io/audio/salamander/A3.mp3",
       "C4": "https://tonejs.github.io/audio/salamander/C4.mp3",
-      "G4": "https://tonejs.github.io/audio/salamander/G4.mp3",
+      "D#4": "https://tonejs.github.io/audio/salamander/Ds4.mp3",
+      "F#4": "https://tonejs.github.io/audio/salamander/Fs4.mp3",
+      "A4": "https://tonejs.github.io/audio/salamander/A4.mp3",
+      "C5": "https://tonejs.github.io/audio/salamander/C5.mp3",
+      "D#5": "https://tonejs.github.io/audio/salamander/Ds5.mp3",
+      "F#5": "https://tonejs.github.io/audio/salamander/Fs5.mp3",
+      "A5": "https://tonejs.github.io/audio/salamander/A5.mp3",
+      "C6": "https://tonejs.github.io/audio/salamander/C6.mp3",
+      "D#6": "https://tonejs.github.io/audio/salamander/Ds6.mp3",
+      "F#6": "https://tonejs.github.io/audio/salamander/Fs6.mp3"
     },
-    release: 1
+    release: 1,
+    attack: 0.1,
+    volume: -8
   }).toDestination();
-  const organ = new Tone.FMSynth({
+
+  // Enhanced organ sound
+  const organ = new Tone.PolySynth(Tone.FMSynth, {
     harmonicity: 2,
-    modulationIndex: 3,
-    oscillator: { type: "sine" },
+    modulationIndex: 1.5,
+    oscillator: {
+      type: "sine"
+    },
     envelope: {
       attack: 0.01,
       decay: 0.2,
       sustain: 0.8,
       release: 0.1
+    },
+    modulation: {
+      type: "square"
+    },
+    modulationEnvelope: {
+      attack: 0.5,
+      decay: 0,
+      sustain: 1,
+      release: 0.5
     }
   }).toDestination();
 
-  // Initialize drum kit
+  // Initialize drum kit with better sounds
   const drumKit = {
     kick: new Tone.MembraneSynth({
       pitchDecay: 0.05,
@@ -48,8 +97,9 @@ function App() {
       oscillator: { type: "sine" },
       envelope: {
         attack: 0.001,
-        decay: 0.2,
-        sustain: 0,
+        decay: 0.4,
+        sustain: 0.01,
+        release: 1.4
       }
     }).toDestination(),
     snare: new Tone.NoiseSynth({
@@ -57,7 +107,8 @@ function App() {
       envelope: {
         attack: 0.001,
         decay: 0.2,
-        sustain: 0
+        sustain: 0,
+        release: 0.2
       }
     }).toDestination(),
     hihat: new Tone.MetalSynth({
@@ -75,8 +126,9 @@ function App() {
       noise: { type: "pink" },
       envelope: {
         attack: 0.001,
-        decay: 0.2,
-        sustain: 0
+        decay: 0.3,
+        sustain: 0,
+        release: 0.1
       }
     }).toDestination()
   };
@@ -211,31 +263,21 @@ function App() {
     }
 
     if (selectedInstrument === 'drums') {
-      switch (note) {
-        case 'C4':
-          drumKit.kick.triggerAttackRelease('C1', '8n');
-          break;
-        case 'D4':
-          drumKit.snare.triggerAttackRelease('8n', '+0.0');
-          break;
-        case 'E4':
-          drumKit.hihat.triggerAttackRelease('32n', '+0.0');
-          break;
-        case 'F4':
-          drumKit.clap.triggerAttackRelease('8n', '+0.0');
-          break;
-        case 'G4':
-          drumKit.kick.triggerAttackRelease('C2', '8n');
-          break;
-        case 'A4':
-          drumKit.snare.triggerAttackRelease('8n', '+0.0', 0.8);
-          break;
-        case 'B4':
-          drumKit.hihat.triggerAttackRelease('16n', '+0.0', 0.5);
-          break;
-        case 'C5':
-          drumKit.clap.triggerAttackRelease('8n', '+0.0', 0.6);
-          break;
+      // Map MIDI notes to drum sounds
+      const drumMapping: { [key: string]: keyof typeof drumKit } = {
+        'C2': 'kick',
+        'D2': 'snare',
+        'E2': 'hihat',
+        'F2': 'clap',
+        'G2': 'kick',  // Alternative kick
+        'A2': 'snare', // Alternative snare
+        'B2': 'hihat', // Alternative hihat
+        'C3': 'clap'   // Alternative clap
+      };
+
+      const drumType = drumMapping[note];
+      if (drumType) {
+        drumKit[drumType].triggerAttackRelease('8n', Tone.now());
       }
     } else {
       const currentInstrument = {
@@ -245,7 +287,13 @@ function App() {
       }[selectedInstrument];
 
       if (currentInstrument) {
-        currentInstrument.triggerAttackRelease(note, "8n");
+        if (currentInstrument === strings) {
+          currentInstrument.triggerAttackRelease(note, "2n");
+        } else if (currentInstrument === organ) {
+          currentInstrument.triggerAttackRelease(note, "4n");
+        } else {
+          currentInstrument.triggerAttackRelease(note, "8n");
+        }
       }
     }
   };
@@ -308,148 +356,8 @@ function App() {
   };
 
   return (
-    <div className="te-container">
-      <div className="te-controls">
-        <div className="te-instruments">
-          <button 
-            className={selectedInstrument === 'synth' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('synth')}
-          >
-            Synth
-          </button>
-          <button 
-            className={selectedInstrument === 'strings' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('strings')}
-          >
-            Strings
-          </button>
-          <button 
-            className={selectedInstrument === 'organ' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('organ')}
-          >
-            Organ
-          </button>
-          <button 
-            className={selectedInstrument === 'drums' ? 'active' : ''} 
-            onClick={() => setSelectedInstrument('drums')}
-          >
-            Drums
-          </button>
-        </div>
-
-        <div className="te-record">
-          <div className="te-record-mode">
-            <button 
-              className={recordingMode === 'instrument' ? 'active' : ''} 
-              onClick={() => setRecordingMode('instrument')}
-            >
-              Record Instrument
-            </button>
-            <button 
-              className={recordingMode === 'voice' ? 'active' : ''} 
-              onClick={() => setRecordingMode('voice')}
-            >
-              Record Voice
-            </button>
-          </div>
-          <button 
-            className={isRecording ? 'active' : ''} 
-            onClick={isRecording ? stopRecording : startRecording}
-          >
-            {isRecording ? 'Stop Recording' : 'Start Recording'}
-          </button>
-        </div>
-
-        {recordings.length > 0 && (
-          <div className="te-recordings">
-            <h3>Recordings</h3>
-            {recordings.map((recording, index) => (
-              <div key={index} className="te-recording">
-                <audio 
-                  src={recording.url} 
-                  controls 
-                  loop={recording.isLooping}
-                  className="te-audio-player"
-                />
-                <div className="te-recording-controls">
-                  <button 
-                    className={recording.isLooping ? 'active' : ''} 
-                    onClick={() => toggleLoop(index)}
-                  >
-                    {recording.isLooping ? 'Stop Loop' : 'Loop'}
-                  </button>
-                  <button 
-                    className="delete" 
-                    onClick={() => deleteRecording(index)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="te-knobs">
-          <div className="te-knob">
-            <label>Volume</label>
-            <input 
-              type="range" 
-              min="0" 
-              max="1" 
-              step="0.01" 
-              value={volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-            />
-          </div>
-          <div className="te-knob">
-            <label>Tone</label>
-            <input 
-              type="range" 
-              min="0" 
-              max="1" 
-              step="0.01" 
-              value={tone}
-              onChange={(e) => setTone(parseFloat(e.target.value))}
-            />
-          </div>
-          <div className="te-knob">
-            <label>Effects</label>
-            <input 
-              type="range" 
-              min="0" 
-              max="1" 
-              step="0.01" 
-              value={effects}
-              onChange={(e) => setEffects(parseFloat(e.target.value))}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="te-keyboard">
-        {selectedInstrument === 'drums' ? (
-          <>
-            {['Kick', 'Snare', 'HiHat', 'Clap', 'Kick 2', 'Snare 2', 'HiHat 2', 'Clap 2'].map((drum, index) => (
-              <button 
-                key={drum} 
-                onClick={() => playNote(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'][index])}
-              >
-                {drum}
-              </button>
-            ))}
-          </>
-        ) : (
-          <>
-            {['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'].map((note) => (
-              <button key={note} onClick={() => playNote(note)}>
-                {note}
-              </button>
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* Add MIDI status and device selector at the top */}
+    <div className="app">
+      {/* MIDI Status Display */}
       <div className="midi-status" style={{
         padding: '10px',
         margin: '10px',
@@ -478,6 +386,100 @@ function App() {
             ))}
           </select>
         )}
+      </div>
+
+      {/* Instrument Selection */}
+      <div className="controls">
+        <div className="instrument-select">
+          <button 
+            className={selectedInstrument === 'synth' ? 'active' : ''} 
+            onClick={() => setSelectedInstrument('synth')}
+          >
+            Synth
+          </button>
+          <button 
+            className={selectedInstrument === 'strings' ? 'active' : ''} 
+            onClick={() => setSelectedInstrument('strings')}
+          >
+            Strings
+          </button>
+          <button 
+            className={selectedInstrument === 'organ' ? 'active' : ''} 
+            onClick={() => setSelectedInstrument('organ')}
+          >
+            Organ
+          </button>
+          <button 
+            className={selectedInstrument === 'drums' ? 'active' : ''} 
+            onClick={() => setSelectedInstrument('drums')}
+          >
+            Drums
+          </button>
+        </div>
+
+        {/* Volume, Tone, and Effects controls */}
+        <div className="knobs">
+          <div className="knob">
+            <label>Volume</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+            />
+          </div>
+          <div className="knob">
+            <label>Tone</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={tone}
+              onChange={(e) => setTone(parseFloat(e.target.value))}
+            />
+          </div>
+          <div className="knob">
+            <label>Effects</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={effects}
+              onChange={(e) => setEffects(parseFloat(e.target.value))}
+            />
+          </div>
+        </div>
+
+        {/* Recording controls */}
+        <div className="recording-controls">
+          <select
+            value={recordingMode}
+            onChange={(e) => setRecordingMode(e.target.value as 'instrument' | 'voice')}
+          >
+            <option value="instrument">Record Instrument</option>
+            <option value="voice">Record Voice</option>
+          </select>
+          <button onClick={isRecording ? stopRecording : startRecording}>
+            {isRecording ? 'Stop Recording' : 'Start Recording'}
+          </button>
+        </div>
+      </div>
+
+      {/* Recordings */}
+      <div className="recordings">
+        {recordings.map((recording, index) => (
+          <div key={index} className="recording">
+            <audio src={recording.url} controls loop={recording.isLooping} />
+            <button onClick={() => toggleLoop(index)}>
+              {recording.isLooping ? 'Stop Loop' : 'Loop'}
+            </button>
+            <button onClick={() => deleteRecording(index)}>Delete</button>
+          </div>
+        ))}
       </div>
     </div>
   );

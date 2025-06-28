@@ -19,65 +19,81 @@ function App() {
   const [selectedInput, setSelectedInput] = useState<string>('');
   const [midiStatus, setMidiStatus] = useState<string>('Initializing MIDI...');
 
-  // Initialize instruments
-  const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-  const strings = new Tone.Sampler({
-    urls: {
-      "C4": "https://tonejs.github.io/audio/salamander/C4.mp3",
-      "G4": "https://tonejs.github.io/audio/salamander/G4.mp3",
+  // Initialize instruments with distinct sounds
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: {
+      type: "fatsawtooth",
+      count: 3,
+      spread: 40
     },
-    release: 1
-  }).toDestination();
-  const organ = new Tone.FMSynth({
-    harmonicity: 2,
-    modulationIndex: 3,
-    oscillator: { type: "sine" },
     envelope: {
       attack: 0.01,
-      decay: 0.2,
-      sustain: 0.8,
-      release: 0.1
+      decay: 0.1,
+      sustain: 0.3,
+      release: 0.4
     }
   }).toDestination();
 
-  // Initialize drum kit
+  // Strings using high-quality piano samples (as a base for strings)
+  const strings = new Tone.Sampler({
+    urls: {
+      "C3": "https://tonejs.github.io/audio/berklee/Piano_C3.mp3",
+      "C4": "https://tonejs.github.io/audio/berklee/Piano_C4.mp3",
+      "C5": "https://tonejs.github.io/audio/berklee/Piano_C5.mp3",
+      "C6": "https://tonejs.github.io/audio/berklee/Piano_C6.mp3"
+    },
+    release: 2,
+    attack: 0.3,
+    volume: -6,
+    onload: () => {
+      console.log("Strings samples loaded");
+    }
+  }).connect(new Tone.Reverb({
+    decay: 5,
+    wet: 0.6
+  }).toDestination());
+
+  // Church organ emulation
+  const organ = new Tone.PolySynth(Tone.FMSynth, {
+    harmonicity: 2,
+    modulationIndex: 5,
+    oscillator: {
+      type: "sine"
+    },
+    envelope: {
+      attack: 0.05,
+      decay: 0.2,
+      sustain: 0.9,
+      release: 0.1
+    },
+    modulation: {
+      type: "square"
+    },
+    modulationEnvelope: {
+      attack: 0.5,
+      decay: 0,
+      sustain: 1,
+      release: 0.5
+    }
+  }).connect(new Tone.Chorus(4, 2.5, 0.5).toDestination());
+
+  // Enhanced drum kit with better samples
   const drumKit = {
-    kick: new Tone.MembraneSynth({
-      pitchDecay: 0.05,
-      octaves: 5,
-      oscillator: { type: "sine" },
-      envelope: {
-        attack: 0.001,
-        decay: 0.2,
-        sustain: 0,
-      }
+    kick: new Tone.Player({
+      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/kick.mp3",
+      volume: 0
     }).toDestination(),
-    snare: new Tone.NoiseSynth({
-      noise: { type: "white" },
-      envelope: {
-        attack: 0.001,
-        decay: 0.2,
-        sustain: 0
-      }
+    snare: new Tone.Player({
+      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/snare.mp3",
+      volume: -2
     }).toDestination(),
-    hihat: new Tone.MetalSynth({
-      harmonicity: 5.1,
-      modulationIndex: 32,
-      resonance: 4000,
-      octaves: 1.5,
-      envelope: {
-        attack: 0.001,
-        decay: 0.1,
-        release: 0.01
-      }
+    hihat: new Tone.Player({
+      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/hh.mp3",
+      volume: -6
     }).toDestination(),
-    clap: new Tone.NoiseSynth({
-      noise: { type: "pink" },
-      envelope: {
-        attack: 0.001,
-        decay: 0.2,
-        sustain: 0
-      }
+    clap: new Tone.Player({
+      url: "https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/audio/505/clap.mp3",
+      volume: -4
     }).toDestination()
   };
 
@@ -211,31 +227,21 @@ function App() {
     }
 
     if (selectedInstrument === 'drums') {
-      switch (note) {
-        case 'C4':
-          drumKit.kick.triggerAttackRelease('C1', '8n');
-          break;
-        case 'D4':
-          drumKit.snare.triggerAttackRelease('8n', '+0.0');
-          break;
-        case 'E4':
-          drumKit.hihat.triggerAttackRelease('32n', '+0.0');
-          break;
-        case 'F4':
-          drumKit.clap.triggerAttackRelease('8n', '+0.0');
-          break;
-        case 'G4':
-          drumKit.kick.triggerAttackRelease('C2', '8n');
-          break;
-        case 'A4':
-          drumKit.snare.triggerAttackRelease('8n', '+0.0', 0.8);
-          break;
-        case 'B4':
-          drumKit.hihat.triggerAttackRelease('16n', '+0.0', 0.5);
-          break;
-        case 'C5':
-          drumKit.clap.triggerAttackRelease('8n', '+0.0', 0.6);
-          break;
+      // Map MIDI notes to drum sounds
+      const drumMapping: { [key: string]: keyof typeof drumKit } = {
+        'C2': 'kick',
+        'D2': 'snare',
+        'E2': 'hihat',
+        'F2': 'clap',
+        'G2': 'kick',
+        'A2': 'snare',
+        'B2': 'hihat',
+        'C3': 'clap'
+      };
+
+      const drumType = drumMapping[note];
+      if (drumType && drumKit[drumType].loaded) {
+        drumKit[drumType].start();
       }
     } else {
       const currentInstrument = {
@@ -245,7 +251,17 @@ function App() {
       }[selectedInstrument];
 
       if (currentInstrument) {
-        currentInstrument.triggerAttackRelease(note, "8n");
+        switch (selectedInstrument) {
+          case 'strings':
+            currentInstrument.triggerAttackRelease(note, "2n", undefined, 0.7);
+            break;
+          case 'organ':
+            currentInstrument.triggerAttackRelease(note, "4n", undefined, 0.9);
+            break;
+          default:
+            currentInstrument.triggerAttackRelease(note, "8n", undefined, 0.8);
+            break;
+        }
       }
     }
   };

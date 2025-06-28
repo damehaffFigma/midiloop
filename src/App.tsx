@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
+import { WebMidi, Input } from 'webmidi';
 import './App.css';
 
 function App() {
@@ -11,6 +12,12 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingMode, setRecordingMode] = useState<'instrument' | 'voice'>('instrument');
   const [recordings, setRecordings] = useState<Array<{ url: string; isLooping: boolean }>>([]);
+  
+  // MIDI state
+  const [midiEnabled, setMidiEnabled] = useState(false);
+  const [midiInputs, setMidiInputs] = useState<Input[]>([]);
+  const [selectedInput, setSelectedInput] = useState<string>('');
+  const [midiStatus, setMidiStatus] = useState<string>('Initializing MIDI...');
 
   // Initialize instruments
   const synth = new Tone.PolySynth(Tone.Synth).toDestination();
@@ -78,6 +85,73 @@ function App() {
   const filter = new Tone.Filter(1000, "lowpass").toDestination();
   const reverb = new Tone.Reverb(2).toDestination();
   const recorder = useRef(new Tone.Recorder());
+
+  useEffect(() => {
+    // Initialize WebMidi
+    WebMidi
+      .enable()
+      .then(() => {
+        setMidiEnabled(true);
+        setMidiStatus('MIDI enabled');
+        setMidiInputs(WebMidi.inputs);
+        
+        // Log available inputs
+        console.log('Available MIDI inputs:', WebMidi.inputs);
+        
+        // Setup MIDI connection/disconnection listeners
+        WebMidi.addListener('connected', (e) => {
+          console.log('MIDI device connected:', e);
+          setMidiInputs(WebMidi.inputs);
+          setMidiStatus(`MIDI device connected: ${e.port.name}`);
+        });
+
+        WebMidi.addListener('disconnected', (e) => {
+          console.log('MIDI device disconnected:', e);
+          setMidiInputs(WebMidi.inputs);
+          setMidiStatus(`MIDI device disconnected: ${e.port.name}`);
+        });
+      })
+      .catch(err => {
+        console.error('WebMidi could not be enabled:', err);
+        setMidiStatus(`MIDI Error: ${err.message}`);
+      });
+
+    return () => {
+      // Cleanup WebMidi
+      WebMidi.removeListener('connected');
+      WebMidi.removeListener('disconnected');
+    };
+  }, []);
+
+  // Handle MIDI input selection
+  useEffect(() => {
+    if (!selectedInput) return;
+
+    // Remove listeners from all inputs first
+    WebMidi.inputs.forEach(input => {
+      input.removeListener();
+    });
+
+    const input = WebMidi.getInputById(selectedInput);
+    if (input) {
+      input.addListener('noteon', e => {
+        const note = e.note.identifier; // e.g., "C4"
+        playNote(note);
+      });
+
+      input.addListener('noteoff', e => {
+        // Handle note off if needed
+      });
+
+      setMidiStatus(`Connected to: ${input.name}`);
+    }
+
+    return () => {
+      if (input) {
+        input.removeListener();
+      }
+    };
+  }, [selectedInput]);
 
   useEffect(() => {
     // Connect instruments to effects and recorder
@@ -349,6 +423,35 @@ function App() {
               </button>
             ))}
           </>
+        )}
+      </div>
+
+      {/* Add MIDI status and device selector at the top */}
+      <div className="midi-status" style={{
+        padding: '10px',
+        margin: '10px',
+        backgroundColor: midiEnabled ? '#e6ffe6' : '#ffe6e6',
+        borderRadius: '5px',
+        border: '1px solid ' + (midiEnabled ? '#99cc99' : '#cc9999')
+      }}>
+        <div>{midiStatus}</div>
+        {midiEnabled && midiInputs.length > 0 && (
+          <select 
+            value={selectedInput}
+            onChange={(e) => setSelectedInput(e.target.value)}
+            style={{
+              margin: '5px 0',
+              padding: '5px',
+              borderRadius: '3px'
+            }}
+          >
+            <option value="">Select MIDI Input</option>
+            {midiInputs.map(input => (
+              <option key={input.id} value={input.id}>
+                {input.name}
+              </option>
+            ))}
+          </select>
         )}
       </div>
     </div>

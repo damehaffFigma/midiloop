@@ -86,72 +86,95 @@ function App() {
   const reverb = new Tone.Reverb(2).toDestination();
   const recorder = useRef(new Tone.Recorder());
 
+  // Initialize WebMidi
   useEffect(() => {
-    // Initialize WebMidi
-    WebMidi
-      .enable()
-      .then(() => {
+    const initWebMidi = async () => {
+      try {
+        // Enable WebMidi
+        await WebMidi.enable({ sysex: true });
         setMidiEnabled(true);
         setMidiStatus('MIDI enabled');
+        
+        // Update inputs list
         setMidiInputs(WebMidi.inputs);
         
-        // Log available inputs
-        console.log('Available MIDI inputs:', WebMidi.inputs);
-        
-        // Setup MIDI connection/disconnection listeners
-        WebMidi.addListener('connected', (e) => {
-          console.log('MIDI device connected:', e);
+        if (WebMidi.inputs.length < 1) {
+          setMidiStatus('No MIDI devices detected.');
+        } else {
+          setMidiStatus(`Available MIDI devices: ${WebMidi.inputs.map(device => device.name).join(', ')}`);
+          console.log('Available MIDI inputs:', WebMidi.inputs);
+        }
+
+        // Add connection listeners
+        WebMidi.addListener("connected", e => {
+          console.log("MIDI Device connected:", e);
           setMidiInputs(WebMidi.inputs);
           setMidiStatus(`MIDI device connected: ${e.port.name}`);
         });
 
-        WebMidi.addListener('disconnected', (e) => {
-          console.log('MIDI device disconnected:', e);
+        WebMidi.addListener("disconnected", e => {
+          console.log("MIDI Device disconnected:", e);
           setMidiInputs(WebMidi.inputs);
           setMidiStatus(`MIDI device disconnected: ${e.port.name}`);
         });
-      })
-      .catch(err => {
+
+      } catch (err) {
         console.error('WebMidi could not be enabled:', err);
-        setMidiStatus(`MIDI Error: ${err.message}`);
-      });
+        setMidiStatus(`MIDI Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    };
+
+    initWebMidi();
 
     return () => {
-      // Cleanup WebMidi
-      WebMidi.removeListener('connected');
-      WebMidi.removeListener('disconnected');
+      // Cleanup
+      WebMidi.removeListener("connected");
+      WebMidi.removeListener("disconnected");
+      if (midiEnabled) {
+        WebMidi.disable();
+      }
     };
   }, []);
 
-  // Handle MIDI input selection
+  // Handle MIDI input selection and note events
   useEffect(() => {
-    if (!selectedInput) return;
+    if (!selectedInput || !midiEnabled) return;
 
-    // Remove listeners from all inputs first
-    WebMidi.inputs.forEach(input => {
-      input.removeListener();
-    });
+    try {
+      // Get the selected input device
+      const input = WebMidi.getInputById(selectedInput);
+      if (!input) {
+        setMidiStatus('Selected MIDI device not found');
+        return;
+      }
 
-    const input = WebMidi.getInputById(selectedInput);
-    if (input) {
-      input.addListener('noteon', e => {
-        const note = e.note.identifier; // e.g., "C4"
-        playNote(note);
+      // Remove existing listeners from all inputs
+      WebMidi.inputs.forEach(input => {
+        input.removeListener();
       });
 
-      input.addListener('noteoff', e => {
-        // Handle note off if needed
+      // Add listeners to the selected input
+      input.addListener("noteon", e => {
+        console.log(`Note played: ${e.note.name}${e.note.octave}`);
+        playNote(`${e.note.name}${e.note.octave}`);
+      });
+
+      input.addListener("noteoff", e => {
+        // Optional: Handle note off events if needed
+        console.log(`Note released: ${e.note.name}${e.note.octave}`);
       });
 
       setMidiStatus(`Connected to: ${input.name}`);
-    }
 
-    return () => {
-      if (input) {
+      return () => {
+        // Cleanup listeners when input changes or component unmounts
         input.removeListener();
-      }
-    };
-  }, [selectedInput]);
+      };
+    } catch (err) {
+      console.error('Error setting up MIDI input:', err);
+      setMidiStatus(`Error setting up MIDI input: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }, [selectedInput, midiEnabled]);
 
   useEffect(() => {
     // Connect instruments to effects and recorder
@@ -432,17 +455,19 @@ function App() {
         margin: '10px',
         backgroundColor: midiEnabled ? '#e6ffe6' : '#ffe6e6',
         borderRadius: '5px',
-        border: '1px solid ' + (midiEnabled ? '#99cc99' : '#cc9999')
+        border: '1px solid ' + (midiEnabled ? '#99cc99' : '#cc9999'),
+        fontFamily: 'monospace'
       }}>
-        <div>{midiStatus}</div>
+        <div style={{ marginBottom: '8px' }}>{midiStatus}</div>
         {midiEnabled && midiInputs.length > 0 && (
           <select 
             value={selectedInput}
             onChange={(e) => setSelectedInput(e.target.value)}
             style={{
-              margin: '5px 0',
-              padding: '5px',
-              borderRadius: '3px'
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ccc'
             }}
           >
             <option value="">Select MIDI Input</option>
